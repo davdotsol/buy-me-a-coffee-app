@@ -52,7 +52,7 @@ const IndexPage = () => {
   };
 
   return (
-    <div>
+    <div className="container">
       <h1>Buy Me a Coffee</h1>
       {web3 ? (
         <>
