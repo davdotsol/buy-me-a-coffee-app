@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 contract Coffee {
-    address public owner;
+    address payable public owner;
     uint public totalDonations;
 
     event DonationReceived(address indexed donor, uint amount);
 
     constructor() {
-        owner = msg.sender;
+        owner = payable(msg.sender);
     }
 
     function donate() public payable {
@@ -16,6 +16,9 @@ contract Coffee {
 
         // Update the total donations
         totalDonations += msg.value;
+
+        // Transfer the donated amount to the contract owner
+        owner.transfer(msg.value);
 
         // Emit the DonationReceived event
         emit DonationReceived(msg.sender, msg.value);

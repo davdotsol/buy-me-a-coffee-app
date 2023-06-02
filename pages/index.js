@@ -1,51 +1,49 @@
 import React, { useState } from 'react';
-import Web3 from 'web3';
+import { ethers } from 'ethers';
 import Coffee from '../abis/Coffee.json';
 
-const IndexPage = () => {
-  const [web3, setWeb3] = useState(null);
-  const [account, setAccount] = useState(null);
-  const [contract, setContract] = useState(null);
-  const [donationAmount, setDonationAmount] = useState('');
+const contractAddress = '0x499e92CA65DCae686e26C86779d2DAC081234319';
+
+const Home = () => {
+  const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const connectWeb3 = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts',
-        });
-        setAccount(accounts[0]);
-        const web3 = new Web3(window.ethereum);
-        const networkId = await web3.eth.net.getId();
-        const deployedNetwork = Coffee.networks[networkId];
-        const contract = new web3.eth.Contract(
-          Coffee.abi,
-          deployedNetwork && deployedNetwork.address
-        );
-        setWeb3(web3);
-        setContract(contract);
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
-      console.error('Web3 provider not found');
-    }
-  };
+  const handleDonate = async () => {
+    let signer = null;
 
-  const donate = async () => {
-    if (contract && account) {
+    let provider;
+    if (window.ethereum == null) {
+      // If MetaMask is not installed, we use the default provider,
+      // which is backed by a variety of third-party services (such
+      // as INFURA). They do not have private keys installed so are
+      // only have read-only access
+      console.log('MetaMask not installed; using read-only defaults');
+    } else {
       setLoading(true);
+      // Connect to the MetaMask EIP-1193 object. This is a standard
+      // protocol that allows Ethers access to make all read-only
+      // requests through MetaMask.
+      provider = new ethers.BrowserProvider(window.ethereum);
+
+      // It also provides an opportunity to request access to write
+      // operations, which will be performed by the private key
+      // that MetaMask manages for the user.
+      signer = await provider.getSigner();
       try {
-        const donationWei = web3.utils.toWei(donationAmount, 'ether');
-        await contract.methods
-          .donate()
-          .send({ value: donationWei, from: account });
+        const contract = new ethers.Contract(
+          contractAddress,
+          Coffee.abi,
+          signer
+        );
+        const donationTx = await contract.donate({
+          value: ethers.parseEther(amount.toString()),
+        });
+        await donationTx.wait();
         alert('Thank you for your donation!');
-        setDonationAmount('');
-      } catch (error) {
-        console.error(error);
-        alert('An error occurred during the donation process');
+        setAmount(0);
+      } catch (err) {
+        console.error(err);
+        alert('Donation failed. Please try again.');
       }
       setLoading(false);
     }
@@ -54,23 +52,17 @@ const IndexPage = () => {
   return (
     <div className="container">
       <h1>Buy Me a Coffee</h1>
-      {web3 ? (
-        <>
-          <p>Connected with Web3</p>
-          <input
-            type="number"
-            value={donationAmount}
-            onChange={(e) => setDonationAmount(e.target.value)}
-          />
-          <button onClick={donate} disabled={loading}>
-            Donate
-          </button>
-        </>
-      ) : (
-        <button onClick={connectWeb3}>Connect with Web3</button>
-      )}
+      <p>Enter the amount of ETH you want to donate:</p>
+      <input
+        type="number"
+        value={amount}
+        onChange={(e) => setAmount(parseFloat(e.target.value))}
+      />
+      <button onClick={handleDonate} disabled={loading}>
+        Donate
+      </button>
     </div>
   );
 };
 
-export default IndexPage;
+export default Home;
