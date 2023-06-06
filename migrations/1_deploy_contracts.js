@@ -1,7 +1,7 @@
-const Coffee = artifacts.require('Coffee');
+const BuyMeACoffee = artifacts.require('BuyMeACoffee');
 
 module.exports = function (deployer) {
-  deployer.deploy(Coffee).then((instance) => {
+  deployer.deploy(BuyMeACoffee).then((instance) => {
     console.log(instance.address);
   });
 };

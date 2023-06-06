@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Coffee {
+contract BuyMeACoffee {
     address payable public owner;
     uint public totalDonations;
 

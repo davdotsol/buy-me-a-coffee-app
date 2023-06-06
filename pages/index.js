@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
-import Coffee from '../abis/Coffee.json';
+import Coffee from '../abis/BuyMeACoffee.json';
 
-const contractAddress = '0x499e92CA65DCae686e26C86779d2DAC081234319';
+const contractAddress = '0xcD21111824C5DEaca6b7f332c7e6dBAE9f98a117';
 
 const Home = () => {
   const [amount, setAmount] = useState(0);
@@ -55,6 +55,7 @@ const Home = () => {
       <p>Enter the amount of ETH you want to donate:</p>
       <input
         type="number"
+        step="any"
         value={amount}
         onChange={(e) => setAmount(parseFloat(e.target.value))}
       />

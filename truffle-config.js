@@ -42,7 +42,7 @@
  */
 
 require('dotenv').config();
-const { MNEMONIC, PROJECT_ID } = process.env;
+const { PROJECT_ID, MNEMONIC, WALLET_PRIVATE_KEY } = process.env;
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
@@ -85,7 +85,7 @@ module.exports = {
     goerli: {
       provider: () =>
         new HDWalletProvider(
-          MNEMONIC,
+          WALLET_PRIVATE_KEY,
           `https://goerli.infura.io/v3/${PROJECT_ID}`
         ),
       network_id: 5, // Goerli's id
