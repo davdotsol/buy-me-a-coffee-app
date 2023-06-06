@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import Coffee from '../abis/BuyMeACoffee.json';
 
-const contractAddress = '0xcD21111824C5DEaca6b7f332c7e6dBAE9f98a117';
+const contractAddress = '0x00301b5E6D965573e9287DC523b028E4C5119470';
 
 const Home = () => {
+  const [contract, setContract] = useState(null);
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [donations, setDonations] = useState([]);
 
-  const handleDonate = async () => {
+  useEffect(() => {
+    const startUp = async () => {
+      await loadContract();
+    };
+    startUp();
+  }, []);
+
+  const loadContract = async () => {
     let signer = null;
 
     let provider;
@@ -19,7 +28,6 @@ const Home = () => {
       // only have read-only access
       console.log('MetaMask not installed; using read-only defaults');
     } else {
-      setLoading(true);
       // Connect to the MetaMask EIP-1193 object. This is a standard
       // protocol that allows Ethers access to make all read-only
       // requests through MetaMask.
@@ -35,6 +43,32 @@ const Home = () => {
           Coffee.abi,
           signer
         );
+
+        contract.on('DonationReceived', (...eventData) => {
+          const [donor, donationAmount] = eventData;
+
+          setDonations((prevDonations) => {
+            const newDonation = {
+              donor,
+              donationAmount,
+            };
+
+            // append new donation
+            return [...prevDonations, newDonation];
+          });
+        });
+        setContract(contract);
+      } catch (err) {
+        console.error(err);
+        alert('Load Contract failed.');
+      }
+    }
+  };
+
+  const handleDonate = async () => {
+    if (contract) {
+      setLoading(true);
+      try {
         const donationTx = await contract.donate({
           value: ethers.parseEther(amount.toString()),
         });
@@ -62,6 +96,15 @@ const Home = () => {
       <button onClick={handleDonate} disabled={loading}>
         Donate
       </button>
+
+      <h2>Donation History</h2>
+      {donations.map((donation, index) => (
+        <div key={index}>
+          <p>Donor: {donation.donor}</p>
+          <p>Amount: {donation.donationAmount} ETH</p>
+          <hr />
+        </div>
+      ))}
     </div>
   );
 };
